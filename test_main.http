@@ -1,0 +1,17 @@
+# Test your FastAPI endpoints
+
+### 测试 openai的接口计费
+
+POST http://{{host}}:{{port}}/openai/calcul
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "prompt": "123",
+  "result": "挥洒后打开房间had",
+  "max_length": 0,
+  "exchange_rate": 7,
+  "model_name": "gpt4",
+  "context_type": "8K"
+}
+
