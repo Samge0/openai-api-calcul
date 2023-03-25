@@ -56,9 +56,9 @@ with gr.Blocks() as demo:
             txt = gr.Textbox(show_label=False, placeholder="请输入需要模拟计费的文本内容（或者可以直接留空，使用右侧的“模拟字数计费”）", lines=22).style(container=False)
         with gr.Column(scale=1):
             exchange_rate = gr.Slider(0, 20, value=7, step=0.2, label="汇率：", interactive=True)
-            max_length = gr.Slider(0, 1000 * 10000, value=0, step=1.0, label="模拟字数计费（默认按中文计算，需手动清空左侧内容）：", interactive=True)
+            max_length = gr.Slider(0, 1000 * 10000, value=0, step=1.0, label="模拟字数计费（默认按中文计算，如果该值大于0则忽略左侧输入框内容）：", interactive=True)
             model_name_dropdown = gr.components.Dropdown(choices=[member.name for member in ModelName],value=ModelName.gpt4.name, label="请选择模型：")
-            context_type_dropdown = gr.components.Dropdown(choices=[member.value for member in ContextType], value=ContextType.k8.value, label="请选择上下文size（仅在gpt-4有效）：")
+            context_type_dropdown = gr.components.Dropdown(choices=[member.value for member in ContextType], value=ContextType.default.value, label="请选择上下文size（仅在gpt-4有效）：")
             button = gr.Button("开始计算")
     button.click(main, [txt, exchange_rate, max_length, model_name_dropdown, context_type_dropdown, state], [state] + text_boxes)
 

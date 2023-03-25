@@ -4,6 +4,7 @@
 # data：2023-03-24 13:01
 # describe：
 import enum
+import math
 
 import tiktoken
 
@@ -22,7 +23,7 @@ class ContextType(enum.Enum):
     """
     gpt4 上下文size
     """
-    all = "all"
+    default = "default"
     k8 = "8K"
     k32 = "32K"
 
@@ -39,18 +40,24 @@ class ModelName(enum.Enum):
 # 价格字典
 price_config = {
     "gpt2": {
-        "all": {
-            "prompt": 0.12,
-            "result": 0.12
-        }
-    },
-    "gpt3": {
-        "all": {
+        "default": {
             "prompt": 0.002,
             "result": 0.002
-        }
+        },
+        "cn_ratio": 2
+    },
+    "gpt3": {
+        "default": {
+            "prompt": 0.002,
+            "result": 0.002
+        },
+        "cn_ratio": 1.3
     },
     "gpt4": {
+        "default": {
+            "prompt": 0.03,
+            "result": 0.06
+        },
         "8K": {
             "prompt": 0.03,
             "result": 0.06
@@ -58,19 +65,20 @@ price_config = {
         "32K": {
             "prompt": 0.06,
             "result": 0.12
-        }
+        },
+        "cn_ratio": 1.3
     }
 }
 
 
 def _round_price(price) -> float:
     """
-    保留6位小数金额
+    保留8位小数金额
 
     :param price: 价格
     :return:
     """
-    return round(price, 6)
+    return round(price, 8)
 
 
 def generate_all_price_info(price_all, prompt_info, result_info, exchange_rate):
@@ -110,8 +118,8 @@ def generate_price_info(_tokens, _price, _integer_str, _unicode, tag, exchange_r
     total_price = _round_price(total_price)
     return f"""
 {tag}令牌数：{_tokens}
-{tag}价格：${_price} / 1000令牌
-{tag}费用：{_tokens}/1000 * {_price} * {exchange_rate} = ￥{total_price}
+{tag}价格：${_price} / 1024令牌
+{tag}费用：math.ceil({_tokens}/1024) * {_price} * {exchange_rate} = ￥{total_price}
 
 实际的标记块：{_integer_str}
 
@@ -139,7 +147,7 @@ def get_tokens_price_by_length(
         max_length: int,
         model_key: str = ModelName.gpt4.name,
         context_type: str = '8K',
-        exchange_rate: int = 7
+        exchange_rate: float = 7
 ) -> (float, str):
     """
     计算模拟计费下，指定字数（中文）与模型所需费用
@@ -151,27 +159,28 @@ def get_tokens_price_by_length(
     :return:
     """
     model_name = ModelName[model_key].value
+    cn_ratio = float(u_dict.get_dict_value(price_config, f'{model_key}.cn_ratio') or 2)
     if model_name == ModelName.gpt4.value:
         context_type = context_type or ContextType.k8.value
     else:
-        context_type = 'all'
-    result_tokens = max_length * 2
+        context_type = 'default'
+    result_tokens = max_length * cn_ratio
     result_price = float(u_dict.get_dict_value(price_config, f'{model_key}.{context_type}.result'))
-    tip = "模拟字数计费模式下下，该字段值不生成。"
-    price_all = get_price(result_price, result_tokens, exchange_rate)
+    tip = f"当前处于【模拟字数计费模式】，中文令牌转换比例：1中文 ~= {cn_ratio}令牌。"
+    price_all = get_price(result_tokens, result_price, exchange_rate)
     result_info = generate_price_info(result_tokens, result_price, tip, tip, "result", exchange_rate)
     return price_all, generate_all_price_info(result_price, '', result_info, exchange_rate)
 
 
-def get_price(_price, _tokens, exchange_rate: int = 7):
+def get_price(_tokens, _price, exchange_rate: float = 7):
     """
     获取价格
-    :param _price: 价格
     :param _tokens: 总令牌数
+    :param _price: 价格
     :param exchange_rate: 汇率
     :return:
     """
-    return _price/1000 * _tokens * exchange_rate
+    return math.ceil(_tokens/1024) * _price * exchange_rate
 
 
 def get_tokens_price(
@@ -179,7 +188,7 @@ def get_tokens_price(
         result: str,
         model_key: str = ModelName.gpt4.name,
         context_type: str = '8K',
-        exchange_rate: int = 7
+        exchange_rate: float = 7
 ) -> (float, str):
     """
     计算tokens令牌与模型所需费用
@@ -196,7 +205,7 @@ def get_tokens_price(
     if model_name == ModelName.gpt4.value:
         context_type = context_type or ContextType.k8.value
     else:
-        context_type = 'all'
+        context_type = 'default'
 
     if model_key not in price_config.keys():
         return 0.0, f"没有该model_key（{model_key}）对应的价格信息，跳过。"
@@ -210,7 +219,7 @@ def get_tokens_price(
         if prompt_price == 0 or result_price == 0:
             return 0.0, f"获取价格失败，请检查参数是否正确：model_key={model_key}, context_type={context_type}"
 
-        price_all = get_price(prompt_price, prompt_tokens, exchange_rate) + get_price(result_price, result_tokens, exchange_rate)
+        price_all = get_price(prompt_tokens, prompt_price, exchange_rate) + get_price(result_tokens, result_price, exchange_rate)
         prompt_info = generate_price_info(prompt_tokens, prompt_price, prompt_integer_str, prompt_unicode, "prompt", exchange_rate)
         result_info = generate_price_info(result_tokens, result_price, result_integer_str, result_unicode, "result", exchange_rate)
         return price_all, generate_all_price_info(price_all, prompt_info, result_info, exchange_rate)
