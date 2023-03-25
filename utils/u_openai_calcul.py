@@ -119,7 +119,7 @@ def generate_price_info(_tokens, _price, _integer_str, _unicode, tag, exchange_r
     return f"""
 {tag}令牌数：{_tokens}
 {tag}价格：${_price} / 1024令牌
-{tag}费用：math.ceil({_tokens}/1024) * {_price} * {exchange_rate} = ￥{total_price}
+{tag}费用：{_tokens}/1024 * {_price} * {exchange_rate} = ￥{total_price}
 
 实际的标记块：{_integer_str}
 
@@ -180,7 +180,7 @@ def get_price(_tokens, _price, exchange_rate: float = 7):
     :param exchange_rate: 汇率
     :return:
     """
-    return math.ceil(_tokens/1024) * _price * exchange_rate
+    return _tokens/1024 * _price * exchange_rate
 
 
 def get_tokens_price(
