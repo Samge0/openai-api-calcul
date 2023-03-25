@@ -19,6 +19,10 @@ github地址：https://github.com/openai/tiktoken/blob/main/README.md
 """
 
 
+# openai中K对应的数值，程序中1K=1024，而openai的1K=1000
+K = 1000
+
+
 class ContextType(enum.Enum):
     """
     gpt4 上下文size
@@ -118,8 +122,8 @@ def generate_price_info(_tokens, _price, _integer_str, _unicode, tag, exchange_r
     total_price = _round_price(total_price)
     return f"""
 {tag}令牌数：{_tokens}
-{tag}价格：${_price} / 1024令牌
-{tag}费用：{_tokens}/1024 * {_price} * {exchange_rate} = ￥{total_price}
+{tag}价格：${_price} / {K}令牌
+{tag}费用：{_tokens}/{K} * {_price} * {exchange_rate} = ￥{total_price}
 
 实际的标记块：{_integer_str}
 
@@ -180,7 +184,7 @@ def get_price(_tokens, _price, exchange_rate: float = 7):
     :param exchange_rate: 汇率
     :return:
     """
-    return _tokens/1024 * _price * exchange_rate
+    return _tokens/K * _price * exchange_rate
 
 
 def get_tokens_price(
