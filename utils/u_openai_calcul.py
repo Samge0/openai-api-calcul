@@ -4,10 +4,7 @@
 # data：2023-03-24 13:01
 # describe：
 import enum
-import math
-
 import tiktoken
-
 from utils import u_dict
 
 """
@@ -96,10 +93,8 @@ def generate_all_price_info(price_all, prompt_info, result_info, exchange_rate):
     :return:
     """
     body_info = f"{prompt_info}\n\n{result_info}" if prompt_info else result_info
-    return f"""
-当前汇率：{exchange_rate}
+    return f"""当前汇率：{exchange_rate}
 总费用：￥{_round_price(price_all)}，其中：
-
 {body_info}
     """
 
@@ -121,8 +116,8 @@ def generate_price_info(_tokens, _price, _integer_str, _unicode, tag, exchange_r
     total_price = get_price(_tokens, _price, exchange_rate)
     total_price = _round_price(total_price)
     return f"""
-{tag}令牌数：{_tokens}
-{tag}价格：${_price} / {K}令牌
+{tag}代币数：{_tokens}
+{tag}价格：${_price} / {K}代币
 {tag}费用：{_tokens}/{K} * {_price} * {exchange_rate} = ￥{total_price}
 
 实际的标记块：{_integer_str}
@@ -140,10 +135,10 @@ def generate_info_without_price(prompt_tokens, result_tokens):
     :return:
     """
     return f"""
-    该模型暂不做计费，令牌数：
+    该模型暂不做计费，代币数：
     
-    prompt令牌数：{prompt_tokens}
-    result令牌数：{result_tokens}
+    prompt代币数：{prompt_tokens}
+    result代币数：{result_tokens}
     """
 
 
@@ -170,7 +165,7 @@ def get_tokens_price_by_length(
         context_type = 'default'
     result_tokens = max_length * cn_ratio
     result_price = float(u_dict.get_dict_value(price_config, f'{model_key}.{context_type}.result'))
-    tip = f"当前处于【模拟字数计费模式】，中文令牌转换比例：1中文 ~= {cn_ratio}令牌。"
+    tip = f"当前处于【模拟字数计费模式】，中文代币转换比例：1中文 ~= {cn_ratio}代币。"
     price_all = get_price(result_tokens, result_price, exchange_rate)
     result_info = generate_price_info(result_tokens, result_price, tip, tip, "result", exchange_rate)
     return price_all, generate_all_price_info(result_price, '', result_info, exchange_rate)
@@ -179,7 +174,7 @@ def get_tokens_price_by_length(
 def get_price(_tokens, _price, exchange_rate: float = 7):
     """
     获取价格
-    :param _tokens: 总令牌数
+    :param _tokens: 总代币数
     :param _price: 价格
     :param exchange_rate: 汇率
     :return:
@@ -195,7 +190,7 @@ def get_tokens_price(
         exchange_rate: float = 7
 ) -> (float, str):
     """
-    计算tokens令牌与模型所需费用
+    计算tokens代币与模型所需费用
 
     :param prompt: 用户输入的字符串
     :param result: 模型生成的字符串
@@ -233,7 +228,7 @@ def get_tokens_price(
 
 def get_tokens_info(value: str, model: str = ModelName.gpt4.value) -> (int, str):
     """
-    获取tokens令牌计算
+    获取tokens代币计算
 
     :param value: 待计算的字符串
     :param model: 模型名："gpt-4", "gpt-3.5-turbo", "gpt2", "p50k_base", "cl100k_base"
@@ -251,7 +246,7 @@ def get_tokens_info(value: str, model: str = ModelName.gpt4.value) -> (int, str)
 
 def __test():
     """测试token计算"""
-    print('tokens令牌计算：\n')
+    print('tokens代币计算：\n')
     model = ModelName.gpt4.value
     test_words = [
         "我",
