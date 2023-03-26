@@ -26,13 +26,19 @@ def handler(result, exchange_rate, max_length, model_name, context_type):
     :return:
     """
 
+    if exchange_rate <= 0:
+        return "【温馨提示】请先从右上角操作栏输入大于0的汇率值"
+
+    if not model_name:
+        return "【温馨提示】请先从右上角操作栏选择一个模型"
+
     if max_length == 0 and len(result or '') == 0:
-        result_info = "【温馨提示】左侧内容跟右侧“模拟字数计费”选项，二者必选其一哦~"
+        return "【温馨提示】左侧内容跟右侧“模拟字数计费”选项，二者必选其一哦~"
+
+    if max_length > 0:  # 如果该值大于0，则忽略 输入框的值
+        price_all, result_info = u_openai_calcul.get_tokens_price_by_length(max_length=max_length, model_key=model_name, context_type=context_type, exchange_rate=exchange_rate)
     else:
-        if max_length > 0:  # 如果该值大于0，则忽略prompt的值
-            price_all, result_info = u_openai_calcul.get_tokens_price_by_length(max_length=max_length, model_key=model_name, context_type=context_type, exchange_rate=exchange_rate)
-        else:
-            price_all, result_info = u_openai_calcul.get_tokens_price(prompt='', result=result, model_key=model_name, context_type=context_type, exchange_rate=exchange_rate)
+        price_all, result_info = u_openai_calcul.get_tokens_price(prompt='', result=result, model_key=model_name, context_type=context_type, exchange_rate=exchange_rate)
     return result_info
 
 
@@ -45,7 +51,7 @@ with gr.Blocks() as app:
                     label="模拟计费的文本内容（如果右侧“模拟字数计费”的值大于0，则自动忽略本输入框内容））",
                     placeholder="请输入需要模拟计费的文本内容（或者可以直接留空，使用右侧的“模拟字数计费”）",
                     lines=20
-                ).style(show_copy_button=True)
+                ).style(show_copy_button=False)
             with gr.Column(scale=1):
                 exchange_rate = gr.Slider(0, 20, value=7.0, step=0.2, label="汇率：", interactive=True)
                 max_length = gr.Slider(0, 1000 * 10000, value=0, step=1.0, label="模拟字数计费（默认按中文计算）：", interactive=True)
@@ -65,7 +71,7 @@ with gr.Blocks() as app:
             placeholder="这里展示计算结果",
             lines=12,
             interactive=True
-        ).style(show_copy_button=True)
+        ).style(show_copy_button=False)
     button.click(handler, [txt, exchange_rate, max_length, model_name_dropdown, context_type_dropdown], outputs=[txt_result])
 
 app.launch(share=False, inbrowser=False, debug=True, server_name="0.0.0.0")
