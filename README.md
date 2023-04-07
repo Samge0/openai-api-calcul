@@ -30,3 +30,7 @@ uvicorn app:app --reload --host 0.0.0.0 --port 7860
 ```shell
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+### 技术交流
+- [Join Discord >>](https://discord.com/invite/eRuSqve8CE)
+- WeChat：`SamgeApp`
