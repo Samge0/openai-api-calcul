@@ -74,4 +74,4 @@ with gr.Blocks() as app:
         ).style(show_copy_button=False)
     button.click(handler, [txt, exchange_rate, max_length, model_name_dropdown, context_type_dropdown], outputs=[txt_result])
 
-app.launch(share=False, inbrowser=False, debug=True, server_name="0.0.0.0")
+app.launch(share=False, inbrowser=False, debug=True, server_name="0.0.0.0", server_port=7860)
